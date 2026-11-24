@@ -1,0 +1,6 @@
+{
+  "name": "MealVerse",
+  "description": "Har Zaiqa, Har Ghar - Pakistan's food delivery & merchant marketplace platform",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

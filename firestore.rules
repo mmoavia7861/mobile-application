@@ -1,0 +1,314 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email == 'moaviah760@gmail.com' && request.auth.token.email_verified == true)
+        || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')
+      );
+    }
+
+    function isValidTimestamp(val) {
+      return val == null || (val is timestamp && val <= request.time);
+    }
+
+    function isValidCoordinates(data) {
+      return (!('latitude' in data) || data.latitude == null || (data.latitude is number && data.latitude >= -90 && data.latitude <= 90))
+        && (!('longitude' in data) || data.longitude == null || (data.longitude is number && data.longitude >= -180 && data.longitude <= 180));
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['userId', 'fullName', 'phoneNumber', 'role', 'city'])
+        && data.userId is string
+        && data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 100
+        && data.phoneNumber is string && data.phoneNumber.size() >= 10
+        && data.role in ['CUSTOMER', 'MERCHANT', 'SHOPKEEPER', 'RIDER', 'ADMIN']
+        && data.city is string && data.city.size() > 0
+        && isValidCoordinates(data)
+        && (!('fcmToken' in data) || data.fcmToken is string)
+        && (!('notificationsEnabled' in data) || data.notificationsEnabled is bool)
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt))
+        && (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    function isValidMerchant(data) {
+      return data.keys().hasAll(['ownerUserId', 'businessName', 'contactPhone', 'verificationStatus'])
+        && data.ownerUserId is string
+        && data.businessName is string && data.businessName.size() > 0 && data.businessName.size() <= 150
+        && data.contactPhone is string && data.contactPhone.size() >= 10
+        && data.verificationStatus in ['PENDING', 'Pending', 'VERIFIED', 'Verified', 'REJECTED', 'Rejected', 'SUSPENDED', 'Suspended']
+        && (!('commissionRate' in data) || data.commissionRate is number)
+        && isValidCoordinates(data)
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt))
+        && (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    function isValidStore(data) {
+      return data.keys().hasAll(['ownerId', 'name', 'category', 'city', 'status'])
+        && data.ownerId is string
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 120
+        && data.category is string && data.category.size() > 0
+        && data.city is string && data.city.size() > 0
+        && data.status in ['PENDING', 'Pending', 'APPROVED', 'Approved', 'REJECTED', 'Rejected', 'SUSPENDED', 'Suspended']
+        && (!('minOrder' in data) || data.minOrder is number)
+        && (!('deliveryFee' in data) || data.deliveryFee is number)
+        && (!('isOpen' in data) || data.isOpen is bool)
+        && isValidCoordinates(data)
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt))
+        && (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['name', 'slug', 'isActive'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.slug is string && data.slug.size() > 0
+        && data.isActive is bool
+        && (!('displayOrder' in data) || data.displayOrder is number)
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt))
+        && (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll(['storeId', 'name', 'price', 'category', 'isAvailable'])
+        && data.storeId is string
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 120
+        && data.price is number && data.price >= 0
+        && data.category is string
+        && data.isAvailable is bool
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt))
+        && (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['customerId', 'storeId', 'city', 'deliveryAddress', 'totalAmount', 'status', 'paymentMethod'])
+        && data.customerId is string
+        && data.storeId is string
+        && data.city is string
+        && data.deliveryAddress is string && data.deliveryAddress.size() > 0
+        && data.totalAmount is number && data.totalAmount >= 0
+        && (!('discountAmount' in data) || (data.discountAmount is number && data.discountAmount >= 0))
+        && (!('voucherCode' in data) || data.voucherCode is string)
+        && (!('voucherTitle' in data) || data.voucherTitle is string)
+        && (!('cardBrand' in data) || data.cardBrand is string)
+        && (!('cardLast4' in data) || (data.cardLast4 is string && data.cardLast4.size() <= 4))
+        && data.status in ['NEW', 'ACCEPTED', 'PREPARING', 'READY', 'ON_THE_WAY', 'DELIVERED', 'REJECTED', 'CANCELLED']
+        && data.paymentMethod in ['COD', 'EASYPAISA', 'JAZZCASH', 'CARD']
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt))
+        && (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    function isValidVoucher(data) {
+      return data.keys().hasAll(['code', 'title', 'discountType', 'discountValue', 'minOrderAmount', 'isActive'])
+        && data.code is string && data.code.size() >= 3 && data.code.size() <= 32
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 100
+        && data.discountType in ['FLAT', 'PERCENTAGE']
+        && data.discountValue is number && data.discountValue > 0
+        && data.minOrderAmount is number && data.minOrderAmount >= 0
+        && (!('maxDiscount' in data) || (data.maxDiscount is number && data.maxDiscount >= 0))
+        && (!('city' in data) || data.city is string)
+        && (!('paymentMethodFilter' in data) || data.paymentMethodFilter is string)
+        && data.isActive is bool
+        && (!('usageLimit' in data) || (data.usageLimit is number && data.usageLimit >= 0))
+        && (!('usedCount' in data) || (data.usedCount is number && data.usedCount >= 0))
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt))
+        && (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['orderId', 'customerId', 'status', 'title', 'body'])
+        && data.orderId is string && data.orderId.size() > 0
+        && data.customerId is string && data.customerId.size() > 0
+        && data.status is string && data.status.size() > 0
+        && data.title is string && data.title.size() > 0
+        && data.body is string && data.body.size() > 0
+        && (!('fcmToken' in data) || data.fcmToken is string)
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt));
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['orderId', 'storeId', 'storeName', 'customerId', 'customerName', 'rating', 'comment'])
+        && data.orderId is string && data.orderId.size() > 0
+        && data.storeId is string && data.storeId.size() > 0
+        && data.storeName is string && data.storeName.size() > 0 && data.storeName.size() <= 120
+        && data.customerId is string && data.customerId.size() > 0
+        && data.customerName is string && data.customerName.size() > 0 && data.customerName.size() <= 100
+        && data.rating is int && data.rating >= 1 && data.rating <= 5
+        && data.comment is string && data.comment.size() >= 3 && data.comment.size() <= 500
+        && (!('orderItemsSummary' in data) || (data.orderItemsSummary is string && data.orderItemsSummary.size() <= 300))
+        && (!('createdAt' in data) || isValidTimestamp(data.createdAt))
+        && (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    // 1. Users collection (Owner + Admin only; prevents PII leakage and self-promotion to ADMIN)
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.userId == userId
+        && isValidUserProfile(request.resource.data)
+        && (request.resource.data.role in ['CUSTOMER', 'MERCHANT', 'SHOPKEEPER'] || isAdmin());
+      allow update: if (
+        isOwner(userId)
+        && request.resource.data.userId == userId
+        && isValidUserProfile(request.resource.data)
+        && (request.resource.data.role == resource.data.role
+            || request.resource.data.role in ['CUSTOMER', 'MERCHANT', 'SHOPKEEPER']
+            || isAdmin())
+      ) || (isAdmin() && isValidUserProfile(request.resource.data));
+      allow delete: if false;
+    }
+
+    // 2. Merchants collection (Owner + Admin read; Admin-only verification status changes)
+    match /merchants/{merchantId} {
+      allow read: if isAuthenticated() && (resource.data.ownerUserId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated()
+        && request.resource.data.ownerUserId == request.auth.uid
+        && isValidMerchant(request.resource.data)
+        && (request.resource.data.verificationStatus in ['PENDING', 'Pending'] || isAdmin())
+        && (!('status' in request.resource.data) || request.resource.data.status in ['PENDING', 'Pending'] || isAdmin());
+      allow update: if isAuthenticated()
+        && isValidMerchant(request.resource.data)
+        && (
+          isAdmin()
+          || (
+            resource.data.ownerUserId == request.auth.uid
+            && request.resource.data.ownerUserId == resource.data.ownerUserId
+            && request.resource.data.verificationStatus == resource.data.verificationStatus
+            && (!('status' in request.resource.data) || request.resource.data.status == resource.data.status)
+          )
+        );
+      allow delete: if false;
+    }
+
+    // 3. Stores & branches collection (Authenticated approved catalog or Owner/Admin; Admin-only status transitions)
+    match /stores/{storeId} {
+      allow read: if isAuthenticated() && (
+        resource.data.status in ['APPROVED', 'Approved']
+        || resource.data.ownerId == request.auth.uid
+        || isAdmin()
+      );
+      allow create: if isAuthenticated()
+        && request.resource.data.ownerId == request.auth.uid
+        && isValidStore(request.resource.data)
+        && (request.resource.data.status in ['PENDING', 'Pending'] || isAdmin());
+      allow update: if isAuthenticated()
+        && isValidStore(request.resource.data)
+        && (
+          isAdmin()
+          || (
+            resource.data.ownerId == request.auth.uid
+            && request.resource.data.ownerId == resource.data.ownerId
+            && request.resource.data.status == resource.data.status
+          )
+        );
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.ownerId == request.auth.uid);
+
+      // Products subcollection (Store owner + Admin writes only)
+      match /products/{productId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated()
+          && isValidProduct(request.resource.data)
+          && (get(/databases/$(database)/documents/stores/$(storeId)).data.ownerId == request.auth.uid || isAdmin());
+        allow delete: if isAuthenticated()
+          && (get(/databases/$(database)/documents/stores/$(storeId)).data.ownerId == request.auth.uid || isAdmin());
+      }
+    }
+
+    // 4. Categories collection (Public taxonomy read; Admin-only mutations)
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() && isValidCategory(request.resource.data);
+    }
+
+    // 5. Orders collection (Scoped to Order Customer, Store Owner, or Admin)
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (
+        resource.data.customerId == request.auth.uid
+        || resource.data.storeOwnerId == request.auth.uid
+        || isAdmin()
+      );
+      allow create: if isAuthenticated()
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.status == 'NEW'
+        && isValidOrder(request.resource.data);
+      allow update: if isAuthenticated()
+        && isValidOrder(request.resource.data)
+        && (
+          isAdmin()
+          || (
+            resource.data.storeOwnerId == request.auth.uid
+            && request.resource.data.customerId == resource.data.customerId
+            && request.resource.data.storeOwnerId == resource.data.storeOwnerId
+          )
+          || (
+            resource.data.customerId == request.auth.uid
+            && request.resource.data.customerId == resource.data.customerId
+            && request.resource.data.status == 'CANCELLED'
+          )
+        );
+      allow delete: if false;
+    }
+
+    // 6. FCM Order Notifications dispatch queue
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (resource.data.customerId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated()
+        && isValidNotification(request.resource.data)
+        && (
+          request.resource.data.customerId == request.auth.uid
+          || isAdmin()
+          || (
+            exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
+            && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.storeOwnerId == request.auth.uid
+          )
+        );
+      allow update: if isAuthenticated()
+        && (resource.data.customerId == request.auth.uid || isAdmin())
+        && isValidNotification(request.resource.data);
+      allow delete: if false;
+    }
+
+    // 7. Vouchers & promo deals collection (Admin manages; signed-in customer can increment usedCount on order placement)
+    match /vouchers/{voucherId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidVoucher(request.resource.data);
+      allow update: if isAdmin() || (
+        isAuthenticated()
+        && isValidVoucher(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedCount', 'updatedAt'])
+        && request.resource.data.usedCount == resource.data.usedCount + 1
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 8. Post-delivery Customer Reviews collection ('Reviews')
+    match /Reviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && isValidReview(request.resource.data)
+        && request.resource.data.customerId == request.auth.uid
+        && reviewId == request.resource.data.orderId
+        && exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
+        && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.customerId == request.auth.uid
+        && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.status == 'DELIVERED'
+        && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.storeId == request.resource.data.storeId;
+      allow update: if isAuthenticated()
+        && resource.data.customerId == request.auth.uid
+        && isValidReview(request.resource.data)
+        && request.resource.data.customerId == resource.data.customerId
+        && request.resource.data.orderId == resource.data.orderId
+        && request.resource.data.storeId == resource.data.storeId;
+      allow delete: if isAdmin();
+    }
+  }
+}

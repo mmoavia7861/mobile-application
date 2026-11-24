@@ -1,0 +1,11 @@
+{
+  "name": "mealverse-fcm-functions",
+  "description": "Cloud Functions for Firebase sending FCM push notifications on Firestore order status changes",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.5.0",
+    "firebase-functions": "^5.0.0"
+  }
+}

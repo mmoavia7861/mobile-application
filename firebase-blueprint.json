@@ -1,0 +1,259 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile for customer, merchant, shopkeeper, rider, or admin",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "role": { "type": "string", "enum": ["CUSTOMER", "MERCHANT", "SHOPKEEPER", "RIDER", "ADMIN"] },
+        "city": { "type": "string" },
+        "address": { "type": "string" },
+        "landmark": { "type": "string" },
+        "houseFlat": { "type": "string" },
+        "streetSector": { "type": "string" },
+        "merchantId": { "type": "string" },
+        "fcmToken": { "type": "string" },
+        "notificationsEnabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "fullName", "phoneNumber", "role", "city"]
+    },
+    "Merchant": {
+      "title": "Merchant",
+      "description": "Registered merchant / vendor organization on the marketplace",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerUserId": { "type": "string" },
+        "businessName": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "cnicNumber": { "type": "string" },
+        "ntnNumber": { "type": "string" },
+        "bankAccountTitle": { "type": "string" },
+        "bankName": { "type": "string" },
+        "ibanNumber": { "type": "string" },
+        "verificationStatus": { "type": "string", "enum": ["PENDING", "VERIFIED", "REJECTED", "SUSPENDED"] },
+        "commissionRate": { "type": "number" },
+        "storeCount": { "type": "number" },
+        "rejectionReason": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerUserId", "businessName", "contactPhone", "verificationStatus"]
+    },
+    "Store": {
+      "title": "Store",
+      "description": "Retail branch or restaurant listing belonging to a merchant",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "merchantId": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "category": { "type": "string" },
+        "categoryIds": { "type": "array", "items": { "type": "string" } },
+        "description": { "type": "string" },
+        "city": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "openingTime": { "type": "string" },
+        "closingTime": { "type": "string" },
+        "minOrder": { "type": "number" },
+        "deliveryFee": { "type": "number" },
+        "prepTimeMinutes": { "type": "number" },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "REJECTED", "SUSPENDED"] },
+        "isOpen": { "type": "boolean" },
+        "imageUrl": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "name", "category", "city", "status"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Marketplace product and food taxonomy classification",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "displayOrder": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "isFeatured": { "type": "boolean" },
+        "itemCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "slug", "isActive"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Menu or catalog item for a store",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "storeId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "isAvailable": { "type": "boolean" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["storeId", "name", "price", "category", "isAvailable"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Food delivery or marketplace order",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "storeId": { "type": "string" },
+        "storeName": { "type": "string" },
+        "merchantId": { "type": "string" },
+        "city": { "type": "string" },
+        "deliveryAddress": { "type": "string" },
+        "subtotal": { "type": "number" },
+        "deliveryFee": { "type": "number" },
+        "discountAmount": { "type": "number" },
+        "voucherCode": { "type": "string" },
+        "voucherTitle": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["COD", "EASYPAISA", "JAZZCASH", "CARD"] },
+        "paymentStatus": { "type": "string", "enum": ["PENDING", "SUCCESS", "FAILED"] },
+        "cardBrand": { "type": "string" },
+        "cardLast4": { "type": "string" },
+        "status": { "type": "string", "enum": ["NEW", "ACCEPTED", "PREPARING", "READY", "ON_THE_WAY", "DELIVERED", "REJECTED", "CANCELLED"] },
+        "riderId": { "type": "string" },
+        "specialInstructions": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerId", "storeId", "city", "deliveryAddress", "totalAmount", "status", "paymentMethod"]
+    },
+    "Voucher": {
+      "title": "Voucher",
+      "description": "Promotional discount voucher redeemable on marketplace orders",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "discountType": { "type": "string", "enum": ["FLAT", "PERCENTAGE"] },
+        "discountValue": { "type": "number" },
+        "maxDiscount": { "type": "number" },
+        "minOrderAmount": { "type": "number" },
+        "city": { "type": "string" },
+        "paymentMethodFilter": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "usageLimit": { "type": "number" },
+        "usedCount": { "type": "number" },
+        "badgeText": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["code", "title", "discountType", "discountValue", "minOrderAmount", "isActive"]
+    },
+    "OrderNotification": {
+      "title": "OrderNotification",
+      "description": "FCM push notification dispatch record triggered by order status changes",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orderId": { "type": "string" },
+        "customerId": { "type": "string" },
+        "storeName": { "type": "string" },
+        "status": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "fcmToken": { "type": "string" },
+        "deliveryChannel": { "type": "string" },
+        "dispatchStatus": { "type": "string", "enum": ["PENDING", "SENT", "FAILED"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["orderId", "customerId", "status", "title", "body"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Post-delivery star rating and comment submitted by a customer for a delivered order",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orderId": { "type": "string" },
+        "storeId": { "type": "string" },
+        "storeName": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "orderItemsSummary": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["orderId", "storeId", "storeName", "customerId", "customerName", "rating", "comment"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "UserProfile" },
+      "description": "User profiles, addresses, and FCM registration tokens"
+    },
+    "/merchants/{merchantId}": {
+      "schema": { "$ref": "Merchant" },
+      "description": "Registered marketplace merchants and legal entities"
+    },
+    "/stores/{storeId}": {
+      "schema": { "$ref": "Store" },
+      "description": "Physical stores, branches and restaurants"
+    },
+    "/stores/{storeId}/products/{productId}": {
+      "schema": { "$ref": "Product" },
+      "description": "Menu and catalog items"
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "Category" },
+      "description": "Taxonomy classifications and food categories"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "Order" },
+      "description": "Customer orders and payment records"
+    },
+    "/vouchers/{voucherId}": {
+      "schema": { "$ref": "Voucher" },
+      "description": "Promotional discount vouchers for checkout"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "OrderNotification" },
+      "description": "FCM order status push notification log and trigger records"
+    },
+    "/Reviews/{reviewId}": {
+      "schema": { "$ref": "Review" },
+      "description": "Post-delivery customer star ratings and review comments"
+    }
+  }
+}
